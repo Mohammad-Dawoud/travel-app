@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Travel Guide App</title>
+  <meta name="description"
+    content="A smart app that helps you plan your travels with weather forecasts and destination information" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="images/favicon.ico" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Roboto+Condensed:wght@400;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <img src="img/logo.png" alt="Travel Guide App Logo" />
+    </div>
+  </header>
+
+  <!-- Input Form -->
+  <section class="form-input-outer-wrapper">
+    <div class="form-input-inner-wrapper">
+      <h1 style="color: white; text-align: center; margin-bottom: 30px; letter-spacing: 3px; font-weight: 300;">Plan
+        Your Journey</h1>
+
+      <!-- Input Fields: Departure/Return Dates -->
+      <div class="basic-flexbox">
+        <!-- Input Field: Departure Date -->
+        <input type="date" id="depart-date-input" name="depart-date-input" required />
+        <!-- Date Partition Icon -->
+        <div class="icon-wrapper">
+          <i class="material-icons">arrow_right_alt</i>
+        </div>
+        <!-- Input Field: Return Date -->
+        <input type="date" id="return-date-input" name="return-date-input" required />
+      </div>
+
+      <!-- Input Field: Destination -->
+      <input type="text" name="destination-input" id="destination-input" placeholder="Where would you like to go?"
+        required />
+
+      <!-- Input Field: User's Remarks -->
+      <textarea name="remarks-input" id="remarks-input" rows="2"
+        placeholder="Add notes about your trip (optional)"></textarea>
+
+      <!-- Generate Button -->
+      <input type="submit" name="generate-travel-info" value="Plan My Trip" class="generate-button" />
+      <div class="process-message"></div>
+    </div>
+  </section>
+
+  <!-- Section: Form Output -->
+  <section class="print-area">
+    <div class="form-output-outer-wrapper">
+      <div class="form-output-inner-wrapper">
+        <!-- Output Header -->
+        <div class="output-header">
+          <!-- Geographic Meta -->
+          <div class="destination-meta">
+            <!-- Destination and Country -->
+            <i class="material-icons">place</i>
+            <div id="destination-name"></div>
+            <div id="country-name"></div>
+            <!-- Country Code, Time Zone, Population and About -->
+            <div class="more-info">
+              <!-- Country Code -->
+              <div class="sub-item">
+                <i class="material-icons">code</i>
+                <div id="country-code"></div>
+              </div>
+              <!-- Time Zone -->
+              <div class="sub-item">
+                <i class="material-icons">access_time</i>
+                <div id="time-zone"></div>
+              </div>
+              <!-- Population -->
+              <div class="sub-item">
+                <i class="material-icons">people_outline</i>
+                <div id="population"></div>
+              </div>
+              <!-- About -->
+              <div class="sub-item">
+                <i class="material-icons">my_location</i>
+                <div id="destination-description"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="dates-wrapper">
+          <!-- Trip Days -->
+          <div class="trip-day"></div>
+          <div class="output-dates basic-flexbox">
+            <!-- Departure Date -->
+            <div class="date-wrapper depart-date">
+              <div class="heading">Departure</div>
+              <div id="depart-date" class="output-date"></div>
+            </div>
+            <!-- High/Low Temp Icon -->
+            <div class="icon-wrapper">
+              <i class="material-icons">arrow_right_alt</i>
+            </div>
+            <!-- Return Date -->
+            <div class="date-wrapper return-date">
+              <div class="heading">Return</div>
+              <div id="return-date" class="output-date"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weather Info -->
+        <div class="weather-wrapper">
+          <div class="weather-message">Forecast for your trip</div>
+        </div>
+
+        <!-- Remarks -->
+        <div class="remarks-wrapper">
+          <div class="remarks">
+            <i class="material-icons">edit</i>
+            <div id="remarks"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Buttons -->
+  <section class="buttons">
+    <!-- Close Button -->
+    <button class="close-button" name="close-button" onclick="return Client.closeButton()">
+      <i class="material-icons">close</i>
+    </button>
+    <!-- Print Button -->
+    <button class="print-button" name="print-button" onclick="return Client.printButton()">
+      <i class="material-icons">print</i>
+    </button>
+  </section>
+
+  <!-- Trip Info Section -->
+  <section id="trip-info"></section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-wrapper">
+      <!-- Copyright -->
+      <div class="footer-copyright">
+        <p> Travel Guide App • <a href="#">MoDawood</a> • © 2025 </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script: Service Worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/service-worker.js");
+      });
+    }
+  </script>
+</body>
+
+</html>

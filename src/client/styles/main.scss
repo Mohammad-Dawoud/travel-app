@@ -1,0 +1,825 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;600;700&display=swap");
+
+// Styling Variables
+$primaryFont: "Poppins", sans-serif;
+$secondaryFont: "Roboto Condensed", sans-serif;
+$primaryColor: #03a9f4;
+$accentColor: #ff9800;
+$darkGrey: #555;
+$midGrey: #888;
+$lightGrey: #f3f3f3;
+$white: #fff;
+$boxShadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+$transition: all 0.3s ease;
+
+// Main Structure
+html {
+  scroll-behavior: smooth;
+
+  body {
+    font-family: $primaryFont;
+    background-color: $lightGrey;
+    padding: 0;
+    margin: 0;
+    color: $darkGrey;
+    line-height: 1.6;
+
+    a {
+      color: $primaryColor;
+      transition: $transition;
+
+      &:hover {
+        opacity: 0.8;
+        text-decoration: none;
+      }
+    }
+
+    ::-webkit-input-placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    :-ms-input-placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    ::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+}
+
+/* Header */
+header {
+  width: 100%;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+
+  .logo img {
+    width: 120px;
+    margin-top: 50px;
+    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
+    transition: $transition;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+}
+
+/* General */
+.basic-flexbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.print-area,
+.buttons {
+  display: none;
+}
+
+.print-area {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+}
+
+/* Form Input */
+.form-input-outer-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)),
+    url("../img/top-img.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  margin-bottom: 5px;
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      135deg,
+      rgba(3, 169, 244, 0.5),
+      rgba(255, 152, 0, 0.3)
+    );
+  }
+
+  .form-input-inner-wrapper {
+    position: relative;
+    z-index: 2;
+    padding: 220px 40px 40px;
+    max-width: 800px;
+    margin: 0 auto;
+    backdrop-filter: blur(5px);
+    border-radius: 20px;
+    background-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+    input,
+    input[type="text"],
+    input[type="date"],
+    textarea {
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: $white;
+      font-family: $primaryFont;
+      font-size: 16px;
+      text-align: center;
+      letter-spacing: 2px;
+      padding: 16px 15px;
+      box-sizing: border-box;
+      outline: none;
+      border: none;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      transition: $transition;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+      &:focus {
+        background-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+    }
+
+    .icon-wrapper {
+      width: 60px;
+
+      .material-icons {
+        width: 60px;
+        color: $accentColor;
+        text-align: center;
+        font-size: 24px;
+        text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+    }
+  }
+
+  input[type="submit"] {
+    width: 100%;
+    color: $white;
+    font-family: $primaryFont;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 16px 10px;
+    background: linear-gradient(to right, $primaryColor, $accentColor);
+    border: none;
+    border-radius: 50px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    cursor: pointer;
+    transition: $transition;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+
+    &:hover {
+      box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(1px);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .process-message {
+    color: $accentColor;
+    text-align: center;
+    font-style: italic;
+    letter-spacing: 2px;
+    font-weight: 500;
+    transition: 0.8s;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Form Output */
+.form-output-outer-wrapper {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9),
+    rgba(243, 243, 243, 0.7)
+  );
+  padding: 5%;
+  transition: 0.8s;
+  border-radius: 10px;
+  box-shadow: $boxShadow;
+
+  .form-output-inner-wrapper {
+    overflow: hidden;
+    background-color: $white;
+    border: none;
+    border-radius: 10px;
+    box-shadow: $boxShadow;
+
+    .destination-meta {
+      color: $white;
+      text-align: center;
+      background-color: $darkGrey;
+      background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        url("../img/top-img.jpg");
+      background-size: cover;
+      background-position: center;
+      padding: 10%;
+      position: relative;
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          135deg,
+          rgba(3, 169, 244, 0.7),
+          rgba(0, 0, 0, 0.6)
+        );
+        z-index: 1;
+      }
+
+      .material-icons {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        color: $accentColor;
+        font-size: 3em;
+        margin-bottom: 20px;
+      }
+
+      #destination-name {
+        position: relative;
+        z-index: 2;
+        font-size: 3.5em;
+        font-weight: bold;
+        margin-bottom: 10px;
+        text-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+      }
+
+      #country-name {
+        position: relative;
+        z-index: 2;
+        font-size: 1em;
+        text-transform: uppercase;
+        letter-spacing: 6px;
+        margin-bottom: 20px;
+      }
+
+      .more-info {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        margin: 40px auto 0;
+        overflow: auto;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+
+        .sub-item {
+          width: 24%;
+          padding: 15px 0;
+          transition: $transition;
+
+          &:hover {
+            transform: translateY(-5px);
+          }
+
+          .material-icons {
+            font-size: 2em;
+            margin-bottom: 10px;
+          }
+
+          #destination-description {
+            font-size: 0.9em;
+            font-style: italic;
+            line-height: 1.6;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Dates */
+.dates-wrapper {
+  padding: 80px 30px 0;
+  background: linear-gradient(to bottom, #fff, $lightGrey);
+
+  .trip-day {
+    text-align: center;
+    margin-bottom: 50px;
+
+    #counter {
+      width: 140px;
+      height: 140px;
+      color: $primaryColor;
+      font-size: 3.5em;
+      line-height: 140px;
+      border: 2px solid $primaryColor;
+      border-radius: 100%;
+      margin: 0 auto 20px;
+      box-shadow: 0 5px 20px rgba(3, 169, 244, 0.2);
+      background-color: rgba(3, 169, 244, 0.05);
+      transition: $transition;
+
+      &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 25px rgba(3, 169, 244, 0.3);
+      }
+    }
+
+    #counter-text {
+      color: $darkGrey;
+      letter-spacing: 5px;
+      font-weight: 500;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+  }
+
+  .date-wrapper {
+    max-width: 500px;
+    text-align: center;
+    padding: 20px;
+    transition: $transition;
+    border-radius: 10px;
+
+    &:hover {
+      background-color: rgba(3, 169, 244, 0.05);
+      transform: translateY(-5px);
+    }
+
+    .heading {
+      color: $primaryColor;
+      font-size: 1.1em;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .output-date {
+      font-size: 2.2em;
+      font-weight: bold;
+      letter-spacing: 5px;
+      color: $darkGrey;
+    }
+  }
+
+  .material-icons {
+    color: $accentColor;
+    font-size: 28px;
+  }
+}
+
+/* Weather */
+.weather-wrapper {
+  padding: 80px 50px 40px;
+  overflow: auto;
+  background: linear-gradient(to bottom, $lightGrey, #fff);
+
+  .weather-message {
+    color: $midGrey;
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 18px;
+    font-style: italic;
+  }
+
+  .weather-card {
+    width: 20%;
+    float: left;
+    text-align: center;
+    padding: 15px;
+    transition: $transition;
+    border-radius: 10px;
+
+    &:hover {
+      background-color: rgba(3, 169, 244, 0.05);
+      transform: translateY(-5px);
+      box-shadow: $boxShadow;
+    }
+
+    img {
+      width: 80px;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.2));
+    }
+
+    .temp {
+      font-size: 0.9em;
+      color: $darkGrey;
+      margin: 8px 0;
+    }
+
+    .material-icons {
+      color: $accentColor;
+      margin: 5px 0;
+    }
+
+    .temp-date {
+      font-weight: 600;
+      padding: 15px 0;
+      color: $primaryColor;
+    }
+  }
+}
+
+/* Remarks */
+.remarks-wrapper {
+  padding: 65px 50px 120px;
+  background-color: #fff;
+
+  .remarks {
+    width: 100%;
+    padding: 20px;
+    background-color: $lightGrey;
+    border-radius: 10px;
+    box-shadow: $boxShadow;
+    transition: $transition;
+
+    &:hover {
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .material-icons {
+      width: 5%;
+      display: block;
+      float: left;
+      color: $primaryColor;
+      font-size: 1.5em;
+      margin-right: 15px;
+    }
+
+    #remarks {
+      width: 90%;
+      display: block;
+      float: left;
+      font-size: 1em;
+      letter-spacing: 2px;
+      line-height: 1.8;
+      color: $darkGrey;
+    }
+  }
+}
+
+/* Buttons */
+.buttons {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  flex-direction: column;
+  z-index: 1000;
+
+  button {
+    width: 50px;
+    height: 50px;
+    border-radius: 100%;
+    cursor: pointer;
+    transition: $transition;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    &:active {
+      transform: translateY(1px);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .close-button {
+    background: $white;
+    border: none;
+    margin-bottom: 15px;
+
+    .material-icons {
+      font-size: 1.5em;
+      color: $primaryColor;
+    }
+  }
+
+  .print-button {
+    background: linear-gradient(to right, $primaryColor, $accentColor);
+    border: none;
+
+    .material-icons {
+      font-size: 1.5em;
+      color: $white;
+    }
+  }
+}
+
+/* Footer */
+footer {
+  clear: both;
+  overflow: auto;
+  background-color: $darkGrey;
+}
+
+.footer-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  color: $white;
+  padding: 30px 0;
+
+  p {
+    font-size: 14px;
+    margin: 0;
+    letter-spacing: 1px;
+  }
+
+  a {
+    text-decoration: none;
+    font-weight: bold;
+    color: $accentColor;
+    transition: $transition;
+
+    &:hover {
+      color: $primaryColor;
+    }
+  }
+}
+
+/* Trip Info Section */
+#trip-info {
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #f9f9f9, #fff);
+}
+
+#data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: $white;
+  font-family: $primaryFont;
+  color: $darkGrey;
+  padding: 50px 20px;
+  margin: 20px 0;
+  border-radius: 15px;
+  box-shadow: $boxShadow;
+  max-width: 1200px;
+  margin: 0 auto;
+  transition: $transition;
+
+  &:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  .trip-img {
+    width: 100%;
+    max-width: 800px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    transition: $transition;
+
+    &:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  h2 {
+    margin-bottom: 40px;
+    font-size: 2.5em;
+    text-align: center;
+    color: $primaryColor;
+    font-weight: 700;
+    letter-spacing: 1px;
+    position: relative;
+    padding-bottom: 15px;
+
+    &:after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(to right, $primaryColor, $accentColor);
+    }
+  }
+
+  p {
+    margin-bottom: 20px;
+    font-size: 1.2em;
+    line-height: 1.5;
+    text-align: center;
+    font-weight: 500;
+    color: $darkGrey;
+    transition: $transition;
+    padding: 10px;
+    border-radius: 5px;
+
+    &:hover {
+      color: $primaryColor;
+      background-color: rgba(3, 169, 244, 0.05);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+/* Media Queries */
+@media only screen and (max-width: 980px) {
+  .form-input-outer-wrapper .form-input-inner-wrapper {
+    padding: 180px 30px 30px;
+  }
+
+  .remarks-wrapper .remarks .material-icons {
+    width: 10%;
+  }
+
+  .remarks-wrapper .remarks #remarks {
+    width: 85%;
+  }
+
+  .footer-wrapper {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px 0;
+
+    p {
+      margin: 5px 0;
+    }
+  }
+
+  #data h2 {
+    font-size: 2em;
+  }
+
+  #data p {
+    font-size: 1em;
+  }
+}
+
+@media only screen and (max-width: 767px) {
+  .basic-flexbox {
+    flex-direction: column;
+  }
+
+  .form-output-outer-wrapper
+    .form-output-inner-wrapper
+    .destination-meta
+    .more-info
+    .sub-item {
+    width: 50%;
+    margin-bottom: 20px;
+  }
+
+  #output-dates .material-icons {
+    display: none;
+  }
+
+  .weather-wrapper .weather-card {
+    width: 50%;
+    margin-bottom: 20px;
+  }
+
+  .form-input-outer-wrapper .form-input-inner-wrapper {
+    padding: 160px 25px 25px;
+  }
+
+  .dates-wrapper {
+    padding: 60px 20px 0;
+  }
+
+  .weather-wrapper {
+    padding: 60px 20px 20px;
+  }
+
+  .remarks-wrapper {
+    padding: 40px 20px 100px;
+  }
+}
+
+@media only screen and (max-width: 479px) {
+  .form-input-outer-wrapper .form-input-inner-wrapper {
+    padding: 140px 20px 20px;
+  }
+
+  .form-input-outer-wrapper .form-input-inner-wrapper input,
+  .form-input-outer-wrapper .form-input-inner-wrapper input[type="date"],
+  .form-input-outer-wrapper .form-input-inner-wrapper input[type="text"],
+  .form-input-outer-wrapper .form-input-inner-wrapper textarea {
+    letter-spacing: 1px;
+    font-size: 14px;
+    padding: 12px 10px;
+  }
+
+  input[type="submit"] {
+    letter-spacing: 2px;
+    font-size: 14px;
+  }
+
+  .form-output-outer-wrapper
+    .form-output-inner-wrapper
+    .destination-meta
+    #destination-name {
+    font-size: 2em;
+  }
+
+  .form-output-outer-wrapper
+    .form-output-inner-wrapper
+    .destination-meta
+    #country-name {
+    font-size: 0.8em;
+    letter-spacing: 3px;
+  }
+
+  .form-output-outer-wrapper
+    .form-output-inner-wrapper
+    .destination-meta
+    .more-info
+    .sub-item {
+    width: 100%;
+    margin-bottom: 15px;
+  }
+
+  #country-code,
+  #time-zone,
+  #population,
+  .form-output-outer-wrapper
+    .form-output-inner-wrapper
+    .destination-meta
+    .more-info
+    .sub-item
+    #destination-description {
+    font-size: 0.8em;
+  }
+
+  .dates-wrapper .date-wrapper .output-date {
+    font-size: 1.5em;
+    letter-spacing: 2px;
+  }
+
+  .dates-wrapper .trip-day #counter {
+    width: 100px;
+    height: 100px;
+    line-height: 100px;
+    font-size: 2.5em;
+  }
+
+  .weather-wrapper .weather-card {
+    width: 100%;
+  }
+
+  .weather-wrapper .weather-card .temp {
+    font-size: 0.8em;
+  }
+
+  .weather-wrapper .weather-card .material-icons {
+    font-size: 1.2em;
+  }
+
+  .remarks-wrapper {
+    padding: 30px 15px 100px;
+
+    .remarks #remarks {
+      width: 80%;
+      letter-spacing: 1px;
+    }
+
+    .remarks .material-icons {
+      width: 15%;
+    }
+  }
+
+  #data h2 {
+    font-size: 1.5em;
+  }
+
+  #data p {
+    font-size: 0.9em;
+  }
+
+  .buttons button {
+    width: 45px;
+    height: 45px;
+  }
+}
