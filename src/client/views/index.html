@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Plan a trip using a local synthetic travel catalog."
+      content="Plan a trip, check travel dates, and view available destination information."
     />
     <title>Travel Guide App</title>
     <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
@@ -20,9 +20,8 @@
       <section class="form-input-outer-wrapper" aria-labelledby="journey-title">
         <form class="form-input-inner-wrapper" id="trip-form" novalidate>
           <h1 id="journey-title">Plan Your Journey</h1>
-          <p class="fixture-note">
-            Local demo with synthetic weather and images. Try Paris, Tokyo or
-            Cairo.
+          <p class="fixture-note" id="mode-note">
+            Trip lookup needs the local server.
           </p>
           <div class="basic-flexbox date-fields">
             <label
@@ -37,7 +36,7 @@
             <input
               type="text"
               name="destination"
-              placeholder="e.g. Paris"
+              placeholder="e.g. Paris, France"
               required
               autocomplete="off"
           /></label>
@@ -78,6 +77,14 @@
             </div>
           </dl>
           <p id="weather"></p>
+          <p id="provider-credit" hidden>
+            Location by <a href="https://www.geonames.org/">GeoNames</a>.
+            Weather by <a href="https://www.weatherbit.io/">Weatherbit</a>, with
+            data formatted for this app.
+          </p>
+          <p id="photo-credit" hidden>
+            <a id="photo-source">Photo on Pixabay</a>
+          </p>
           <p id="warnings" role="status"></p>
           <div class="trip-actions">
             <button type="button" id="close-trip">Close trip</button>

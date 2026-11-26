@@ -14,7 +14,9 @@
     "lint": "eslint .",
     "format:check": "prettier --check .",
     "test": "jest --runInBand",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "demo:live": "npm run build && node --env-file=.local/live.env src/server/index.js",
+    "smoke:live": "node --env-file=.local/live.env tools/smoke-live.js"
   },
   "dependencies": {
     "express": "5.3.0"

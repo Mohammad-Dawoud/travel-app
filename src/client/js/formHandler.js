@@ -1,17 +1,29 @@
 import { calendarDay, calendarOffset, validateTrip } from '../../shared/trip';
-import { safeImagePath } from '../../shared/images';
+import { localPhotoPattern, pixabaySource } from '../../shared/live-media';
+import { fallbackImage, safeImagePath } from '../../shared/images';
 
 const messages = {
   invalid_trip:
     'Enter a destination and dates in order within the next 365 days.',
   destination_not_found:
     'That destination is outside the demo catalog. Try Paris, Tokyo or Cairo.',
-  location_timeout: 'The demo location lookup timed out. Try again.',
-  location_unavailable: 'The demo location lookup is unavailable. Try again.',
+  destination_ambiguous:
+    'Several places match. Enter City, Country or City, Region, Country.',
+  location_authorization:
+    'GeoNames rejected the account. Check that free web services are enabled.',
+  location_rate_limited:
+    'GeoNames quota reached. Try again when credits reset.',
+  location_timeout: 'The location lookup timed out. Try again.',
+  location_unavailable: 'The location lookup is unavailable. Try again.',
   trip_capacity: 'The demo is busy. Try again shortly.',
 };
 const warningMessages = {
   weather_unavailable: 'Demo weather is unavailable for this date.',
+  weather_outside_window:
+    'The departure date is outside the available Weatherbit forecast window.',
+  weather_not_entitled:
+    'Weatherbit did not authorize this request. Check the key and plan.',
+  weather_rate_limited: 'Weatherbit is rate limited. Try again later.',
   image_unavailable: 'Showing a local fallback illustration.',
 };
 
@@ -44,10 +56,15 @@ function renderTrip(document, trip) {
     trip.durationDays + (trip.durationDays === 1 ? ' day' : ' days'),
   );
   const weather = trip.weather;
-  const label =
-    weather?.kind === 'near-term'
-      ? 'Synthetic near-term snapshot'
-      : 'Synthetic departure forecast';
+  const labels = {
+    'near-term': 'Synthetic near-term snapshot',
+    forecast: 'Synthetic departure forecast',
+    current: 'Current conditions',
+    'live-forecast': 'Departure forecast',
+  };
+  const label = Object.hasOwn(labels, weather?.kind)
+    ? labels[weather.kind]
+    : 'Weather';
   text(
     'weather',
     weather
@@ -58,15 +75,39 @@ function renderTrip(document, trip) {
           weather.temperatureC +
           ' °C, ' +
           weather.description
-      : 'No synthetic weather available.',
+      : trip.synthetic
+        ? 'No synthetic weather available.'
+        : 'No Weatherbit data available for this trip.',
   );
   const warning = trip.warnings
-    .map((code) =>
-      Object.hasOwn(warningMessages, code) ? warningMessages[code] : '',
-    )
+    .map((code) => {
+      if (code === 'weather_unavailable' && !trip.synthetic)
+        return 'Weatherbit weather is unavailable.';
+      return Object.hasOwn(warningMessages, code) ? warningMessages[code] : '';
+    })
     .filter(Boolean);
   text('warnings', warning.join(' '));
-  document.getElementById('trip-image').src = safeImagePath(trip.image);
+  const image = document.getElementById('trip-image');
+  const credit = document.getElementById('photo-credit');
+  const link = document.getElementById('photo-source');
+  const source =
+    !trip.synthetic && localPhotoPattern.test(trip.image)
+      ? pixabaySource(trip.photo?.source)
+      : null;
+  document.getElementById('provider-credit').hidden = trip.synthetic;
+  credit.hidden = !source;
+  if (source) {
+    link.href = source;
+    link.textContent = 'Photo by ' + trip.photo.creator + ' on Pixabay';
+    image.alt = 'Destination photo from Pixabay';
+    image.src = trip.image;
+  } else {
+    link.removeAttribute('href');
+    image.alt = trip.synthetic
+      ? 'Synthetic travel illustration'
+      : 'Local fallback illustration';
+    image.src = trip.synthetic ? safeImagePath(trip.image) : fallbackImage;
+  }
 }
 
 export function initializeForm(document) {
@@ -77,6 +118,34 @@ export function initializeForm(document) {
   const status = document.getElementById('trip-status');
   const heading = document.getElementById('destination-name');
   const fields = form.elements;
+  let mode;
+  const modeNote = document.getElementById('mode-note');
+  void fetch('/trip-mode', { cache: 'no-store' })
+    .then(async (response) => {
+      if (!response.ok) return;
+      const config = await response.json();
+      if (config.mode === 'live') {
+        mode = 'live';
+        modeNote.textContent =
+          'Live lookup via GeoNames, Weatherbit and Pixabay. For ambiguous places, include a country or region.';
+      } else if (config.mode === 'mock') {
+        mode = 'mock';
+        modeNote.textContent =
+          'Local demo with synthetic weather and images. Try Paris, Tokyo or Cairo.';
+      }
+    })
+    .catch(() => {});
+  const image = document.getElementById('trip-image');
+  image.addEventListener('error', () => {
+    if (localPhotoPattern.test(image.getAttribute('src'))) {
+      document.getElementById('photo-credit').hidden = true;
+      document
+        .getElementById('warnings')
+        .append(' Showing a local fallback illustration.');
+      image.alt = 'Local fallback illustration';
+      image.src = fallbackImage;
+    }
+  });
   const departure = fields.namedItem('departureDate');
   const returning = fields.namedItem('returnDate');
 
@@ -104,7 +173,7 @@ export function initializeForm(document) {
     if (submit.disabled) return;
     result.hidden = true;
     error.textContent = '';
-    status.textContent = 'Looking up demo trip…';
+    status.textContent = 'Looking up trip…';
     submit.disabled = true;
     try {
       const trip = await processForm({
@@ -113,9 +182,12 @@ export function initializeForm(document) {
         returnDate: returning.value,
       });
       if (trip.error) {
-        error.textContent = Object.hasOwn(messages, trip.error)
-          ? messages[trip.error]
-          : 'The demo lookup is unavailable.';
+        error.textContent =
+          mode === 'live' && trip.error === 'destination_not_found'
+            ? 'No matching city was found. Check the spelling or add the country.'
+            : Object.hasOwn(messages, trip.error)
+              ? messages[trip.error]
+              : 'The trip lookup is unavailable.';
         return;
       }
       renderTrip(document, trip);
@@ -123,7 +195,7 @@ export function initializeForm(document) {
       heading.focus();
     } catch {
       error.textContent = navigator.onLine
-        ? 'The demo lookup is unavailable. Try again.'
+        ? 'The trip lookup is unavailable. Try again.'
         : 'Offline. Reconnect to look up a trip.';
     } finally {
       status.textContent = '';

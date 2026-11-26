@@ -9,7 +9,13 @@ const {
   TripError,
 } = require('./providers');
 
-function createApp({ lookup = lookupFixture, clock = () => new Date() } = {}) {
+const { localPhotoPattern } = require('../shared/live-media');
+
+function createApp({
+  lookup = lookupFixture,
+  clock = () => new Date(),
+  live,
+} = {}) {
   const app = express();
   const dist = path.resolve(__dirname, '../../dist');
   const parse = express.json({ limit: 4096, inflate: false });
@@ -22,6 +28,7 @@ function createApp({ lookup = lookupFixture, clock = () => new Date() } = {}) {
         "default-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
       'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'no-referrer',
+      'Cross-Origin-Resource-Policy': 'same-origin',
     });
     if (req.hostname !== '127.0.0.1')
       return res.status(400).type('text').send('Invalid local host.');
@@ -51,10 +58,12 @@ function createApp({ lookup = lookupFixture, clock = () => new Date() } = {}) {
       const trip = validateTrip(req.body, today);
       if (!trip) return res.status(400).json({ error: 'invalid_trip' });
 
-      const timeout = deadline(overallTimeout);
+      const timeout = deadline(live ? live.timeout : overallTimeout);
       const signal = AbortSignal.any([timeout.signal, disconnected.signal]);
       try {
-        const result = await fetchTrip(lookup, trip, today, signal);
+        const result = live
+          ? await live.trip(trip, signal)
+          : await fetchTrip(lookup, trip, today, signal);
         if (!res.destroyed) return res.json(result);
       } finally {
         timeout.dispose();
@@ -76,6 +85,21 @@ function createApp({ lookup = lookupFixture, clock = () => new Date() } = {}) {
     }
   });
 
+  app.get('/trip-mode', (req, res) =>
+    res.set('Cache-Control', 'no-store').json({ mode: live ? 'live' : 'mock' }),
+  );
+  app.get('/trip-photo/:token', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    if (!live || !localPhotoPattern.test(req.path)) return res.sendStatus(404);
+    try {
+      const photo = live.getPhoto(req.params.token);
+      return photo
+        ? res.type('jpeg').send(Buffer.from(photo))
+        : res.sendStatus(404);
+    } catch {
+      return res.sendStatus(503);
+    }
+  });
   app.get('/', (req, res) => res.sendFile(path.join(dist, 'index.html')));
   app.use(
     express.static(dist, { index: false, redirect: false, dotfiles: 'deny' }),
