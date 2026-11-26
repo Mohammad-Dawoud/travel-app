@@ -1,167 +1,133 @@
-// Utility to close sections
-export function closeButton(
-  outputSelector = ".print-area",
-  buttonSelector = ".buttons"
-) {
-  document.body.scrollTop = 0; // Safari
-  document.documentElement.scrollTop = 0; // Chrome, Firefox, IE, and Opera
+import { calendarDay, calendarOffset, validateTrip } from '../../shared/trip';
+import { safeImagePath } from '../../shared/images';
 
-  const outputOuter = document.querySelector(outputSelector);
-  const closeButton = document.querySelector(buttonSelector);
-}
-// Get current date in YYYY-MM-DD format
-export function currentDate() {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-// Calculate day difference between two dates
-export function dayDiffCheck(d1, d2) {
-  const dayInMs = 24 * 60 * 60 * 1000;
-  const diffInMs = new Date(d2).getTime() - new Date(d1).getTime();
-  return Math.floor(diffInMs / dayInMs);
-}
-
-// Validate minimum date
-export function minDate(dateInput) {
-  return dateInput >= currentDate();
-}
-
-// Print section
-export function printButton(printAreaSelector) {
-  const printArea = document.querySelector(printAreaSelector).innerHTML;
-  const originalBody = document.body.innerHTML;
-
-  document.body.innerHTML = printArea;
-  window.print();
-  document.body.innerHTML = originalBody;
-}
-const handleSubmitButton = document.querySelector(".generate-button");
-const departDateInputField = document.querySelector("#depart-date-input");
-const returnDateInputField = document.querySelector("#return-date-input");
-const destinationInputField = document.querySelector("#destination-input");
-const remarksInputField = document.querySelector("#remarks-input");
-const processMsg = document.querySelector(".process-message");
-
-export async function processForm(event) {
-  event.preventDefault();
-
-  const departDateInput = departDateInputField.value;
-  console.log(departDateInput);
-  const returnDateInput = returnDateInputField.value;
-  console.log(returnDateInput);
-  const destinationInput = destinationInputField.value;
-  console.log("destrepution input" + destinationInput);
-  const remarksInput = remarksInputField.value;
-  console.log(remarksInput);
-
-  if (!departDateInput || !returnDateInput || !destinationInput) {
-    alert("Date and destination fields are required.");
-    return;
-  }
-
-  if (!minDate(departDateInput) || !minDate(returnDateInput)) {
-    alert("The minimum date is today.");
-    return;
-  }
-
-  processMsg.innerHTML = "Processing your request...";
-
-  try {
-    const response = await fetch("/all-apis", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ destinationInput, remarksInput }),
-    });
-
-    if (!response.ok) throw new Error("Failed to fetch data from the server.");
-
-    const data = await response.json();
-    if (data.locValidation) {
-      alert(data.locValidation);
-      processMsg.innerHTML = "";
-      return;
-    }
-
-    console.log("Response data:", data);
-    processMsg.innerHTML = "";
-
-    // Extract necessary information for rendering trip details
-    const geoCoordinates = data.geonamesData.geonames[0];
-    console.log(
-      "geoCoordinates " +
-        geoCoordinates +
-        " points" +
-        geoCoordinates.countryName
-    );
-    const weatherForecast = data.weatherbitData;
-    console.log("weatherForecast " + weatherForecast);
-    const locationImage = data.pixabayData.hits;
-    console.log("locationImage  " + locationImage);
-    const tripLength = dayDiffCheck(departDateInput, returnDateInput);
-    console.log(
-      "tripLength  " +
-        departDateInput +
-        " " +
-        returnDateInput +
-        " " +
-        tripLength
-    );
-    const daysUntilTrip = dayDiffCheck(currentDate(), departDateInput);
-    console.log("daysUntilTrip " + daysUntilTrip);
-    const tripDetailsContainer = document.getElementById("trip-info");
-    console.log("tripDetailsContainer " + tripDetailsContainer);
-    // Call renderTripDetails with appropriate arguments
-    renderTripDetails(
-      geoCoordinates,
-      weatherForecast,
-      locationImage,
-      departDateInput,
-      returnDateInput,
-      tripLength
-    );
-  } catch (error) {
-    console.error("Error:", error.message);
-    alert("An error occurred while processing your request. Please try again.");
-    processMsg.innerHTML = "";
-  }
-}
-
-const renderTripDetails = (
-  geoCoordinates,
-  weatherForecast,
-  locationImage,
-  start,
-  end,
-  tripLength
-) => {
-  const tripDetailsContainer = document.getElementById("trip-info");
-  const daysUntilTrip = dayDiffCheck(currentDate(), start);
-
-  tripDetailsContainer.innerHTML = `
-        <div id="data">
-        <h2>Journey to ${geoCoordinates.countryName}</h2>
-        ${locationImage.map((e) => {
-          return `<img src="${e.webformatURL}" alt="${geoCoordinates.countryName}" class="trip-img">`;
-        })}
-        <div>
-        <p>Departure Date: ${start}</p>
-        <p>Return Date: ${end}</p>
-        <p>Days until departure: ${daysUntilTrip}</p>
-        <p>Trip Length: ${tripLength} days</p>
-        <p>Weather Forecast: ${weatherForecast.data[0].temp}°C, ${
-    weatherForecast.data[0].weather.description
-  }</p>
-       </div>
-       </div>
-        `;
+const messages = {
+  invalid_trip:
+    'Enter a destination and dates in order within the next 365 days.',
+  destination_not_found:
+    'That destination is outside the demo catalog. Try Paris, Tokyo or Cairo.',
+  location_timeout: 'The demo location lookup timed out. Try again.',
+  location_unavailable: 'The demo location lookup is unavailable. Try again.',
+  trip_capacity: 'The demo is busy. Try again shortly.',
+};
+const warningMessages = {
+  weather_unavailable: 'Demo weather is unavailable for this date.',
+  image_unavailable: 'Showing a local fallback illustration.',
 };
 
-// Attach event listener to the button
-handleSubmitButton.addEventListener("click", processForm);
+export async function processForm(
+  input,
+  { request = fetch, now = new Date() } = {},
+) {
+  if (!validateTrip(input, calendarDay(now))) return { error: 'invalid_trip' };
+  const response = await request('/all-apis', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  return response.json();
+}
 
-export default processForm;
+function renderTrip(document, trip) {
+  const text = (id, value) => {
+    document.getElementById(id).textContent = value;
+  };
+  text('destination-name', trip.location.name + ', ' + trip.location.country);
+  text('depart-date', trip.departureDate);
+  text('return-date', trip.returnDate);
+  text(
+    'countdown',
+    trip.countdownDays === 0 ? 'Today' : trip.countdownDays + ' days',
+  );
+  text(
+    'duration',
+    trip.durationDays + (trip.durationDays === 1 ? ' day' : ' days'),
+  );
+  const weather = trip.weather;
+  const label =
+    weather?.kind === 'near-term'
+      ? 'Synthetic near-term snapshot'
+      : 'Synthetic departure forecast';
+  text(
+    'weather',
+    weather
+      ? label +
+          ' (' +
+          weather.date +
+          '): ' +
+          weather.temperatureC +
+          ' °C, ' +
+          weather.description
+      : 'No synthetic weather available.',
+  );
+  const warning = trip.warnings
+    .map((code) =>
+      Object.hasOwn(warningMessages, code) ? warningMessages[code] : '',
+    )
+    .filter(Boolean);
+  text('warnings', warning.join(' '));
+  document.getElementById('trip-image').src = safeImagePath(trip.image);
+}
+
+export function initializeForm(document) {
+  const form = document.getElementById('trip-form');
+  const submit = document.getElementById('plan-trip');
+  const result = document.getElementById('trip-info');
+  const error = document.getElementById('trip-error');
+  const status = document.getElementById('trip-status');
+  const heading = document.getElementById('destination-name');
+  const fields = form.elements;
+  const departure = fields.namedItem('departureDate');
+  const returning = fields.namedItem('returnDate');
+
+  function updateDateLimits() {
+    const today = calendarDay(new Date());
+    const latest = calendarOffset(today, 365);
+    departure.min = today;
+    departure.max = latest;
+    returning.min = departure.value || today;
+    returning.max = latest;
+  }
+
+  updateDateLimits();
+  departure.addEventListener('change', updateDateLimits);
+  document.getElementById('close-trip').addEventListener('click', () => {
+    result.hidden = true;
+    submit.focus();
+  });
+  document
+    .getElementById('print-trip')
+    .addEventListener('click', () => window.print());
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (submit.disabled) return;
+    result.hidden = true;
+    error.textContent = '';
+    status.textContent = 'Looking up demo trip…';
+    submit.disabled = true;
+    try {
+      const trip = await processForm({
+        destination: fields.namedItem('destination').value,
+        departureDate: departure.value,
+        returnDate: returning.value,
+      });
+      if (trip.error) {
+        error.textContent = Object.hasOwn(messages, trip.error)
+          ? messages[trip.error]
+          : 'The demo lookup is unavailable.';
+        return;
+      }
+      renderTrip(document, trip);
+      result.hidden = false;
+      heading.focus();
+    } catch {
+      error.textContent = navigator.onLine
+        ? 'The demo lookup is unavailable. Try again.'
+        : 'Offline. Reconnect to look up a trip.';
+    } finally {
+      status.textContent = '';
+      submit.disabled = false;
+    }
+  });
+}

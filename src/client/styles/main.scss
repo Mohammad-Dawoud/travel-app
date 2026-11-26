@@ -1,8 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;600;700&display=swap");
-
 // Styling Variables
-$primaryFont: "Poppins", sans-serif;
-$secondaryFont: "Roboto Condensed", sans-serif;
+$primaryFont: system-ui, sans-serif;
+$secondaryFont: system-ui, sans-serif;
 $primaryColor: #03a9f4;
 $accentColor: #ff9800;
 $darkGrey: #555;
@@ -78,26 +76,14 @@ header {
   justify-content: space-around;
 }
 
-.print-area,
-.buttons {
-  display: none;
-}
-
-.print-area {
-  width: 100%;
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-}
-
 /* Form Input */
 .form-input-outer-wrapper {
   width: 100%;
   min-height: 100vh;
   background-color: rgba(0, 0, 0, 0.4);
-  background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)),
-    url("../img/top-img.jpg");
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)),
+    url('/assets/hero.svg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -105,7 +91,7 @@ header {
   position: relative;
 
   &::before {
-    content: "";
+    content: '';
     position: absolute;
     top: 0;
     left: 0;
@@ -130,8 +116,8 @@ header {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 
     input,
-    input[type="text"],
-    input[type="date"],
+    input[type='text'],
+    input[type='date'],
     textarea {
       width: 100%;
       background-color: rgba(255, 255, 255, 0.1);
@@ -168,9 +154,9 @@ header {
     }
   }
 
-  input[type="submit"] {
+  .generate-button {
     width: 100%;
-    color: $white;
+    color: #172535;
     font-family: $primaryFont;
     font-size: 16px;
     font-weight: 600;
@@ -187,12 +173,17 @@ header {
     transition: $transition;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 
-    &:hover {
+    &:enabled:hover {
       box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
       transform: translateY(-2px);
     }
 
-    &:active {
+    &:disabled {
+      opacity: 0.7;
+      cursor: wait;
+    }
+
+    &:enabled:active {
       transform: translateY(1px);
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
     }
@@ -206,328 +197,6 @@ header {
     font-weight: 500;
     transition: 0.8s;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  }
-}
-
-/* Form Output */
-.form-output-outer-wrapper {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.9),
-    rgba(243, 243, 243, 0.7)
-  );
-  padding: 5%;
-  transition: 0.8s;
-  border-radius: 10px;
-  box-shadow: $boxShadow;
-
-  .form-output-inner-wrapper {
-    overflow: hidden;
-    background-color: $white;
-    border: none;
-    border-radius: 10px;
-    box-shadow: $boxShadow;
-
-    .destination-meta {
-      color: $white;
-      text-align: center;
-      background-color: $darkGrey;
-      background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
-        url("../img/top-img.jpg");
-      background-size: cover;
-      background-position: center;
-      padding: 10%;
-      position: relative;
-
-      &::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          135deg,
-          rgba(3, 169, 244, 0.7),
-          rgba(0, 0, 0, 0.6)
-        );
-        z-index: 1;
-      }
-
-      .material-icons {
-        position: relative;
-        z-index: 2;
-        width: 100%;
-        color: $accentColor;
-        font-size: 3em;
-        margin-bottom: 20px;
-      }
-
-      #destination-name {
-        position: relative;
-        z-index: 2;
-        font-size: 3.5em;
-        font-weight: bold;
-        margin-bottom: 10px;
-        text-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
-      }
-
-      #country-name {
-        position: relative;
-        z-index: 2;
-        font-size: 1em;
-        text-transform: uppercase;
-        letter-spacing: 6px;
-        margin-bottom: 20px;
-      }
-
-      .more-info {
-        position: relative;
-        z-index: 2;
-        width: 100%;
-        margin: 40px auto 0;
-        overflow: auto;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
-
-        .sub-item {
-          width: 24%;
-          padding: 15px 0;
-          transition: $transition;
-
-          &:hover {
-            transform: translateY(-5px);
-          }
-
-          .material-icons {
-            font-size: 2em;
-            margin-bottom: 10px;
-          }
-
-          #destination-description {
-            font-size: 0.9em;
-            font-style: italic;
-            line-height: 1.6;
-          }
-        }
-      }
-    }
-  }
-}
-
-/* Dates */
-.dates-wrapper {
-  padding: 80px 30px 0;
-  background: linear-gradient(to bottom, #fff, $lightGrey);
-
-  .trip-day {
-    text-align: center;
-    margin-bottom: 50px;
-
-    #counter {
-      width: 140px;
-      height: 140px;
-      color: $primaryColor;
-      font-size: 3.5em;
-      line-height: 140px;
-      border: 2px solid $primaryColor;
-      border-radius: 100%;
-      margin: 0 auto 20px;
-      box-shadow: 0 5px 20px rgba(3, 169, 244, 0.2);
-      background-color: rgba(3, 169, 244, 0.05);
-      transition: $transition;
-
-      &:hover {
-        transform: scale(1.05);
-        box-shadow: 0 8px 25px rgba(3, 169, 244, 0.3);
-      }
-    }
-
-    #counter-text {
-      color: $darkGrey;
-      letter-spacing: 5px;
-      font-weight: 500;
-      margin-bottom: 20px;
-      text-transform: uppercase;
-    }
-  }
-
-  .date-wrapper {
-    max-width: 500px;
-    text-align: center;
-    padding: 20px;
-    transition: $transition;
-    border-radius: 10px;
-
-    &:hover {
-      background-color: rgba(3, 169, 244, 0.05);
-      transform: translateY(-5px);
-    }
-
-    .heading {
-      color: $primaryColor;
-      font-size: 1.1em;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      font-weight: 600;
-      margin-bottom: 20px;
-    }
-
-    .output-date {
-      font-size: 2.2em;
-      font-weight: bold;
-      letter-spacing: 5px;
-      color: $darkGrey;
-    }
-  }
-
-  .material-icons {
-    color: $accentColor;
-    font-size: 28px;
-  }
-}
-
-/* Weather */
-.weather-wrapper {
-  padding: 80px 50px 40px;
-  overflow: auto;
-  background: linear-gradient(to bottom, $lightGrey, #fff);
-
-  .weather-message {
-    color: $midGrey;
-    text-align: center;
-    margin-bottom: 40px;
-    font-size: 18px;
-    font-style: italic;
-  }
-
-  .weather-card {
-    width: 20%;
-    float: left;
-    text-align: center;
-    padding: 15px;
-    transition: $transition;
-    border-radius: 10px;
-
-    &:hover {
-      background-color: rgba(3, 169, 244, 0.05);
-      transform: translateY(-5px);
-      box-shadow: $boxShadow;
-    }
-
-    img {
-      width: 80px;
-      margin-bottom: 10px;
-      filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.2));
-    }
-
-    .temp {
-      font-size: 0.9em;
-      color: $darkGrey;
-      margin: 8px 0;
-    }
-
-    .material-icons {
-      color: $accentColor;
-      margin: 5px 0;
-    }
-
-    .temp-date {
-      font-weight: 600;
-      padding: 15px 0;
-      color: $primaryColor;
-    }
-  }
-}
-
-/* Remarks */
-.remarks-wrapper {
-  padding: 65px 50px 120px;
-  background-color: #fff;
-
-  .remarks {
-    width: 100%;
-    padding: 20px;
-    background-color: $lightGrey;
-    border-radius: 10px;
-    box-shadow: $boxShadow;
-    transition: $transition;
-
-    &:hover {
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    .material-icons {
-      width: 5%;
-      display: block;
-      float: left;
-      color: $primaryColor;
-      font-size: 1.5em;
-      margin-right: 15px;
-    }
-
-    #remarks {
-      width: 90%;
-      display: block;
-      float: left;
-      font-size: 1em;
-      letter-spacing: 2px;
-      line-height: 1.8;
-      color: $darkGrey;
-    }
-  }
-}
-
-/* Buttons */
-.buttons {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  flex-direction: column;
-  z-index: 1000;
-
-  button {
-    width: 50px;
-    height: 50px;
-    border-radius: 100%;
-    cursor: pointer;
-    transition: $transition;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-
-    &:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    &:active {
-      transform: translateY(1px);
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-    }
-  }
-
-  .close-button {
-    background: $white;
-    border: none;
-    margin-bottom: 15px;
-
-    .material-icons {
-      font-size: 1.5em;
-      color: $primaryColor;
-    }
-  }
-
-  .print-button {
-    background: linear-gradient(to right, $primaryColor, $accentColor);
-    border: none;
-
-    .material-icons {
-      font-size: 1.5em;
-      color: $white;
-    }
   }
 }
 
@@ -615,7 +284,7 @@ footer {
     padding-bottom: 15px;
 
     &:after {
-      content: "";
+      content: '';
       position: absolute;
       bottom: 0;
       left: 50%;
@@ -645,181 +314,125 @@ footer {
   }
 }
 
-/* Media Queries */
-@media only screen and (max-width: 980px) {
+/* Recovery form and trip details */
+.form-input-outer-wrapper .form-input-inner-wrapper {
+  padding-top: 165px;
+}
+
+#journey-title,
+.fixture-note,
+#trip-form label,
+#offline-status {
+  color: #fff;
+}
+
+#journey-title,
+.fixture-note,
+#offline-status {
+  text-align: center;
+}
+
+.date-fields {
+  gap: 1rem;
+}
+
+#trip-form label {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.date-fields label {
+  flex: 1;
+  min-width: 0;
+}
+
+#trip-form input:hover {
+  border-color: #ffca70;
+}
+
+#trip-form #trip-error {
+  color: #fff0ce;
+}
+
+#trip-form .process-message:empty,
+#offline-status:empty,
+#warnings:empty {
+  display: none;
+}
+
+:focus-visible,
+#trip-form input:focus-visible {
+  outline: 3px solid #ffca70;
+  outline-offset: 3px;
+}
+
+.trip-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 2rem;
+  text-align: center;
+}
+
+.trip-details dt {
+  font-weight: bold;
+}
+
+.trip-details dd {
+  margin: 0;
+}
+
+.trip-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.trip-actions button {
+  padding: 0.65rem 1rem;
+  background: #0b5272;
+  color: #fff;
+  border: 0;
+  border-radius: 0.4rem;
+  cursor: pointer;
+}
+
+.trip-actions button:hover {
+  background: #10415a;
+}
+
+#data .trip-img {
+  max-width: 480px;
+  height: auto;
+}
+
+@media (max-width: 500px) {
   .form-input-outer-wrapper .form-input-inner-wrapper {
-    padding: 180px 30px 30px;
+    padding: 155px 1rem 1rem;
   }
 
-  .remarks-wrapper .remarks .material-icons {
-    width: 10%;
+  .date-fields {
+    display: block;
   }
 
-  .remarks-wrapper .remarks #remarks {
-    width: 85%;
-  }
-
-  .footer-wrapper {
-    flex-direction: column;
-    text-align: center;
-    padding: 20px 0;
-
-    p {
-      margin: 5px 0;
-    }
+  #data {
+    padding: 1rem;
   }
 
   #data h2 {
-    font-size: 2em;
-  }
-
-  #data p {
-    font-size: 1em;
+    font-size: 1.75rem;
   }
 }
 
-@media only screen and (max-width: 767px) {
-  .basic-flexbox {
-    flex-direction: column;
-  }
-
-  .form-output-outer-wrapper
-    .form-output-inner-wrapper
-    .destination-meta
-    .more-info
-    .sub-item {
-    width: 50%;
-    margin-bottom: 20px;
-  }
-
-  #output-dates .material-icons {
+@media print {
+  header,
+  footer,
+  #trip-form,
+  .form-input-outer-wrapper,
+  .trip-actions {
     display: none;
   }
 
-  .weather-wrapper .weather-card {
-    width: 50%;
-    margin-bottom: 20px;
-  }
-
-  .form-input-outer-wrapper .form-input-inner-wrapper {
-    padding: 160px 25px 25px;
-  }
-
-  .dates-wrapper {
-    padding: 60px 20px 0;
-  }
-
-  .weather-wrapper {
-    padding: 60px 20px 20px;
-  }
-
-  .remarks-wrapper {
-    padding: 40px 20px 100px;
-  }
-}
-
-@media only screen and (max-width: 479px) {
-  .form-input-outer-wrapper .form-input-inner-wrapper {
-    padding: 140px 20px 20px;
-  }
-
-  .form-input-outer-wrapper .form-input-inner-wrapper input,
-  .form-input-outer-wrapper .form-input-inner-wrapper input[type="date"],
-  .form-input-outer-wrapper .form-input-inner-wrapper input[type="text"],
-  .form-input-outer-wrapper .form-input-inner-wrapper textarea {
-    letter-spacing: 1px;
-    font-size: 14px;
-    padding: 12px 10px;
-  }
-
-  input[type="submit"] {
-    letter-spacing: 2px;
-    font-size: 14px;
-  }
-
-  .form-output-outer-wrapper
-    .form-output-inner-wrapper
-    .destination-meta
-    #destination-name {
-    font-size: 2em;
-  }
-
-  .form-output-outer-wrapper
-    .form-output-inner-wrapper
-    .destination-meta
-    #country-name {
-    font-size: 0.8em;
-    letter-spacing: 3px;
-  }
-
-  .form-output-outer-wrapper
-    .form-output-inner-wrapper
-    .destination-meta
-    .more-info
-    .sub-item {
-    width: 100%;
-    margin-bottom: 15px;
-  }
-
-  #country-code,
-  #time-zone,
-  #population,
-  .form-output-outer-wrapper
-    .form-output-inner-wrapper
-    .destination-meta
-    .more-info
-    .sub-item
-    #destination-description {
-    font-size: 0.8em;
-  }
-
-  .dates-wrapper .date-wrapper .output-date {
-    font-size: 1.5em;
-    letter-spacing: 2px;
-  }
-
-  .dates-wrapper .trip-day #counter {
-    width: 100px;
-    height: 100px;
-    line-height: 100px;
-    font-size: 2.5em;
-  }
-
-  .weather-wrapper .weather-card {
-    width: 100%;
-  }
-
-  .weather-wrapper .weather-card .temp {
-    font-size: 0.8em;
-  }
-
-  .weather-wrapper .weather-card .material-icons {
-    font-size: 1.2em;
-  }
-
-  .remarks-wrapper {
-    padding: 30px 15px 100px;
-
-    .remarks #remarks {
-      width: 80%;
-      letter-spacing: 1px;
-    }
-
-    .remarks .material-icons {
-      width: 15%;
-    }
-  }
-
-  #data h2 {
-    font-size: 1.5em;
-  }
-
-  #data p {
-    font-size: 0.9em;
-  }
-
-  .buttons button {
-    width: 45px;
-    height: 45px;
+  #data {
+    box-shadow: none;
   }
 }

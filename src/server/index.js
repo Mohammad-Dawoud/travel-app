@@ -1,102 +1,63 @@
-// Bring window.fetch to Node.js
-const fetch = require('node-fetch');
+const { createServer } = require('node:http');
+const { createApp } = require('./app');
 
+function start({ port = 4175, app = createApp() } = {}) {
+  const server = createServer(
+    { requestTimeout: 5000, headersTimeout: 5000 },
+    app,
+  );
+  server.listen(port, '127.0.0.1');
+  return server;
+}
 
-// Main Server Packages
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+function stop(server) {
+  return new Promise((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
+  });
+}
 
+if (require.main === module) {
+  const port = Number(process.env.TRAVEL_PORT ?? 4175);
+  if (!Number.isInteger(port) || port < 1 || port > 65535)
+    throw new Error('Invalid local port.');
+  if (
+    process.env.TRAVEL_PROVIDER_MODE &&
+    process.env.TRAVEL_PROVIDER_MODE !== 'mock'
+  ) {
+    throw new Error('This demo uses local fixture providers.');
+  }
+  const server = start({ port });
+  server.once('error', (error) => {
+    console.error(
+      'Could not start the local demo:',
+      error.code ?? 'listen failure',
+    );
+    process.exitCode = 1;
+  });
+  server.once('listening', () =>
+    console.log('Travel App demo: http://127.0.0.1:' + server.address().port),
+  );
+  let stopping = false;
+  function shutdown() {
+    if (stopping) return;
+    stopping = true;
+    void stop(server).then(
+      () => {
+        console.log('Travel App stopped.');
+        if (process.connected) process.disconnect();
+      },
+      () => {
+        process.exitCode = 1;
+        if (process.connected) process.disconnect();
+      },
+    );
+  }
+  process.once('SIGINT', shutdown);
+  process.once('SIGTERM', shutdown);
+  if (process.connected)
+    process.on('message', (message) => {
+      if (message === 'shutdown') shutdown();
+    });
+}
 
-// Dotenv Package (to setup environment variables)
-const dotenv = require('dotenv');
-dotenv.config();
-
-
-// App instance
-const app = express();
-
-app.use(bodyParser.urlencoded({extended: false}));
-app.use(bodyParser.json());
-app.use(cors());
-app.use(express.static('dist'));
-
-
-// Server Setup and Routes
-const port = 2050;
-app.listen(port, function () {
-    console.log(`Congratulations, your server is running at port ${port}!`);
-    console.log(`http://localhost:${port}`);
-});
-
-app.get('/', function (req, res) {
-    res.sendFile('dist/index.html');
-});
-
-
-// Server Test and Troubleshooting
-const mockAPIResponse = require('./mockAPI.js');
-
-app.get('/test', function (req, res) {
-    res.send(mockAPIResponse)
-});
-
-
-// APIs
-app.post('/all-apis', (req, res) => {
-    // User Input Variable
-    let appInputData = {
-        input: req.body
-    };
-
-
-    // Geonames API Variable
-    const geonamesAPI = `http://api.geonames.org/searchJSON?q=${req.body.destinationInput}&maxRows=1&username=${process.env.GEONAMES_USER}`
-
-    // Get Geonames Data
-    fetch(geonamesAPI)
-        .then(res => res.json())
-        .then(geonamesData => {
-
-            // Validation: Location
-            if (!geonamesData.geonames || geonamesData.geonames.length === 0) {
-                res.status(404).json({ locValidation: 'Invalid location name, please re-enter.' });
-                return;
-            }
-
-            // Weatherbit API Variable
-            const weatherbitAPI = `https://api.weatherbit.io/v2.0/forecast/daily?&lat=${geonamesData.geonames[0].lat}&lon=${geonamesData.geonames[0].lng}&key=${process.env.WEATHERBIT_KEY}`;
-
-            // Get Weatherbit Data
-            fetch(weatherbitAPI)
-                .then(res => res.json())
-                .then(weatherbitData => {
-
-                    // Pixabay Dynamic Data API Variable
-                    const pixabayAPI = `https://pixabay.com/api/?key=${process.env.PIXABAY_KEY}&q=${req.body.destinationInput}&image_type=photo&editors_choice=true&per_page=3`;
-
-                    // Get Pixabay Dynamic Data
-                    fetch(pixabayAPI)
-                        .then(res => res.json())
-                        .then(pixabayData => {
-
-                            // Pixabay Default Data API Variable
-                            const pixabayDefaultAPI = `https://pixabay.com/api/?key=${process.env.PIXABAY_KEY}&q=travel&image_type=photo&editors_choice=true&per_page=3`;
-
-                            // Get Pixabay Default Data
-                            fetch(pixabayDefaultAPI)
-                                .then(res => res.json())
-                                .then(pixabayDefaultData => {
-                                    // Send All Data
-                                    res.send({ appInputData, geonamesData, weatherbitData, pixabayData, pixabayDefaultData });
-                                })
-                        })
-                })
-        })
-        .catch(err => {
-            console.error('Error:', err.message);
-            res.status(500).send('An error occurred while processing your request.');
-        });
-});
-
-
+module.exports = { start, stop };

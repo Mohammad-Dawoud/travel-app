@@ -28,3 +28,6 @@ Thumbs.db
 
 # Omitted media
 /src/client/img/
+
+# Private local tooling and verification evidence
+/.local/

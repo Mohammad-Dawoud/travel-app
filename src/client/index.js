@@ -1,17 +1,19 @@
-import { processForm } from './js/formHandler';
-import { currentDate } from './js/currentDate';
-import { minDate } from './js/minDate';
-import { dayDiffCheck } from './js/dayDiffChecker';
-import { printButton } from './js/printButton';
-import { closeButton } from './js/closeButton';
-
+import { initializeForm, processForm } from './js/formHandler';
 import './styles/main.scss';
 
-export {
-    processForm,
-    currentDate,
-    minDate,
-    dayDiffCheck,
-    printButton,
-    closeButton
+initializeForm(document);
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener(
+    'load',
+    () => {
+      void navigator.serviceWorker.register('/service-worker.js').catch(() => {
+        document.querySelector('#offline-status').textContent =
+          'Offline setup unavailable.';
+      });
+    },
+    { once: true },
+  );
 }
+
+export { processForm };

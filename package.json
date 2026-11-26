@@ -1,0 +1,70 @@
+{
+  "name": "travel-app",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "24.22.3",
+    "npm": "11.19.1"
+  },
+  "packageManager": "npm@11.19.1",
+  "scripts": {
+    "build": "webpack --config-name client && node tools/precache-manifest.js && webpack --config-name worker",
+    "start": "node src/server/index.js",
+    "demo": "npm run build && npm start",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "test": "jest --runInBand",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "express": "5.3.0"
+  },
+  "devDependencies": {
+    "@babel/core": "7.29.13",
+    "@babel/preset-env": "7.29.14",
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.65.1",
+    "babel-jest": "30.5.2",
+    "babel-loader": "10.1.1",
+    "css-loader": "7.1.5",
+    "eslint": "10.15.0",
+    "globals": "17.14.0",
+    "html-webpack-plugin": "5.6.8",
+    "jest": "30.5.2",
+    "mini-css-extract-plugin": "2.10.2",
+    "prettier": "3.10.1",
+    "sass": "1.108.2",
+    "sass-loader": "17.1.1",
+    "supertest": "7.3.2",
+    "webpack": "5.113.0",
+    "webpack-cli": "7.3.1",
+    "workbox-precaching": "7.4.1"
+  },
+  "overrides": {
+    "jest-config": {
+      "glob": {
+        ".": "14.0.6",
+        "minimatch": "11.0.9"
+      }
+    },
+    "jest-runtime": {
+      "glob": {
+        ".": "14.0.6",
+        "minimatch": "11.0.9"
+      }
+    },
+    "@jest/reporters": {
+      "glob": {
+        ".": "14.0.6",
+        "minimatch": "11.0.9"
+      }
+    },
+    "test-exclude": {
+      "glob": {
+        ".": "14.0.6",
+        "minimatch": "11.0.9"
+      },
+      "minimatch": "11.0.9"
+    }
+  }
+}
