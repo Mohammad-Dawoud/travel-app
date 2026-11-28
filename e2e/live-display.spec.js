@@ -19,7 +19,7 @@ test('displays live-mode wording and an attributed local JPEG with injected cont
     return route.abort();
   });
   await page.route('**/trip-mode', (route) =>
-    route.fulfill({ json: { mode: 'live' } }),
+    route.fulfill({ json: { mode: 'live', imageProvider: 'pixabay' } }),
   );
   await page.route('**' + tokenPath, (route) =>
     route.fulfill({ contentType: 'image/jpeg', body: jpeg }),

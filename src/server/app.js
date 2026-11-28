@@ -86,7 +86,13 @@ function createApp({
   });
 
   app.get('/trip-mode', (req, res) =>
-    res.set('Cache-Control', 'no-store').json({ mode: live ? 'live' : 'mock' }),
+    res
+      .set('Cache-Control', 'no-store')
+      .json(
+        live
+          ? { mode: 'live', imageProvider: live.imageProvider }
+          : { mode: 'mock' },
+      ),
   );
   app.get('/trip-photo/:token', (req, res) => {
     res.set('Cache-Control', 'no-store');

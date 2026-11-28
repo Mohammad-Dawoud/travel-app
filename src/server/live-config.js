@@ -3,7 +3,11 @@ function readProviderConfig(env = process.env) {
   if (mode === 'mock') return { mode };
   if (mode !== 'live')
     throw new Error('Set TRAVEL_PROVIDER_MODE to mock or live.');
-  const names = ['GEONAMES_USERNAME', 'WEATHERBIT_API_KEY', 'PIXABAY_API_KEY'];
+  const imageProvider = env.TRAVEL_IMAGE_PROVIDER || 'wikimedia';
+  if (!['wikimedia', 'pixabay'].includes(imageProvider))
+    throw new Error('Set TRAVEL_IMAGE_PROVIDER to wikimedia or pixabay.');
+  const names = ['GEONAMES_USERNAME', 'WEATHERBIT_API_KEY'];
+  if (imageProvider === 'pixabay') names.push('PIXABAY_API_KEY');
   const missing = names.filter(
     (name) => !/^[a-z0-9_.-]{1,128}$/i.test(env[name] ?? ''),
   );
@@ -20,9 +24,10 @@ function readProviderConfig(env = process.env) {
     );
   return {
     mode,
+    imageProvider,
     geonames: env.GEONAMES_USERNAME,
     weatherbit: env.WEATHERBIT_API_KEY,
-    pixabay: env.PIXABAY_API_KEY,
+    ...(imageProvider === 'pixabay' ? { pixabay: env.PIXABAY_API_KEY } : {}),
     forecastDays,
   };
 }

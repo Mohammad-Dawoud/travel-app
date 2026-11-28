@@ -28,6 +28,7 @@ const { jpeg, samplePlace, sampleHit } = require('./live-fixtures.cjs');
 
 const config = {
   mode: 'live',
+  imageProvider: 'pixabay',
   geonames: 'owner_fixture',
   weatherbit: 'weather_fixture_key',
   pixabay: 'photo_fixture_key',
@@ -54,7 +55,7 @@ let clock;
 
 function fixture(url, options) {
   options.signal.throwIfAborted();
-  if (url.hostname === 'api.geonames.org') return geo([samplePlace]);
+  if (url.hostname === 'secure.geonames.org') return geo([samplePlace]);
   if (url.pathname === '/v2.0/current') return encoded({ data: [current] });
   if (url.pathname === '/v2.0/forecast/daily') {
     return encoded({
@@ -103,6 +104,7 @@ test('mock is the safe default and live configuration errors contain field names
   expect(() =>
     readProviderConfig({
       TRAVEL_PROVIDER_MODE: 'live',
+      TRAVEL_IMAGE_PROVIDER: 'pixabay',
       WEATHERBIT_API_KEY: 'one secret',
     }),
   ).toThrow(
@@ -122,7 +124,7 @@ test('resolves a city beyond the mock catalog and serves valid JPEG through an o
   const get = await open();
   await client
     .get('/trip-mode')
-    .expect(200, { mode: 'live' })
+    .expect(200, { mode: 'live', imageProvider: 'pixabay' })
     .expect('Cache-Control', 'no-store');
   const result = await client
     .post('/all-apis')

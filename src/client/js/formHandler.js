@@ -1,5 +1,9 @@
 import { calendarDay, calendarOffset, validateTrip } from '../../shared/trip';
-import { localPhotoPattern, pixabaySource } from '../../shared/live-media';
+import {
+  commonsLicense,
+  localPhotoPattern,
+  photoSource,
+} from '../../shared/live-media';
 import { fallbackImage, safeImagePath } from '../../shared/images';
 
 const messages = {
@@ -92,14 +96,41 @@ function renderTrip(document, trip) {
   const link = document.getElementById('photo-source');
   const source =
     !trip.synthetic && localPhotoPattern.test(trip.image)
-      ? pixabaySource(trip.photo?.source)
+      ? photoSource(trip.photo)
       : null;
   document.getElementById('provider-credit').hidden = trip.synthetic;
   credit.hidden = !source;
-  if (source) {
+  const wikimedia = trip.photo?.provider === 'wikimedia';
+  const license = wikimedia
+    ? commonsLicense(
+        trip.photo.license,
+        trip.photo.licenseUrl,
+        trip.photo.license === 'Public domain' ? 'false' : undefined,
+      )
+    : null;
+  const licenseLink = document.getElementById('photo-license');
+  const statement = document.getElementById('photo-disclosure');
+  credit.hidden = !source || (wikimedia && !license);
+  licenseLink.hidden = !license;
+  statement.textContent = '';
+  if (source && (!wikimedia || license)) {
     link.href = source;
-    link.textContent = 'Photo by ' + trip.photo.creator + ' on Pixabay';
-    image.alt = 'Destination photo from Pixabay';
+    link.textContent = wikimedia
+      ? trip.photo.title + ' — ' + trip.photo.creator
+      : 'Photo by ' + trip.photo.creator + ' on Pixabay';
+    if (license) {
+      licenseLink.href = license.licenseUrl;
+      licenseLink.textContent = license.license;
+      statement.textContent = [
+        trip.photo.credit,
+        'Wikimedia thumbnail. The app made no further edits.',
+      ]
+        .filter(Boolean)
+        .join(' ');
+    }
+    image.alt = wikimedia
+      ? 'Destination photo from Wikimedia Commons'
+      : 'Destination photo from Pixabay';
     image.src = trip.image;
   } else {
     link.removeAttribute('href');
@@ -127,7 +158,11 @@ export function initializeForm(document) {
       if (config.mode === 'live') {
         mode = 'live';
         modeNote.textContent =
-          'Live lookup via GeoNames, Weatherbit and Pixabay. For ambiguous places, include a country or region.';
+          'Live lookup via GeoNames, Weatherbit and ' +
+          (config.imageProvider === 'pixabay'
+            ? 'Pixabay'
+            : 'Wikimedia Commons') +
+          '. For ambiguous places, include a country or region.';
       } else if (config.mode === 'mock') {
         mode = 'mock';
         modeNote.textContent =

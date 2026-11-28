@@ -3,10 +3,7 @@ const path = require('node:path');
 const { setTimeout: wait } = require('node:timers/promises');
 const { chromium } = require('@playwright/test');
 const { calendarDay, calendarOffset } = require('../src/shared/trip');
-const {
-  localPhotoPattern,
-  pixabaySource,
-} = require('../src/shared/live-media');
+const { localPhotoPattern, photoSource } = require('../src/shared/live-media');
 const { readProviderConfig } = require('../src/server/live-config');
 
 const destinations = [
@@ -14,14 +11,16 @@ const destinations = [
   ['Tokyo, Japan', 'Japan', 0],
   ['Cairo, Egypt', 'Egypt', 0],
   ['Lisbon, Portugal', 'Portugal', 2],
+  ['Ramallah, PS', null, 0],
 ];
 
 async function verify() {
   if (process.env.TRAVEL_LIVE_SMOKE !== '1')
     throw new Error(
-      'Set TRAVEL_LIVE_SMOKE=1 only when you intend to make four live requests.',
+      'Set TRAVEL_LIVE_SMOKE=1 only when you intend to make five live trip requests.',
     );
-  if (readProviderConfig().mode !== 'live')
+  const config = readProviderConfig();
+  if (config.mode !== 'live')
     throw new Error('Configure live mode before opting in.');
   const port = Number(process.env.TRAVEL_PORT ?? 4175);
   if (!Number.isInteger(port) || port < 1 || port > 65535)
@@ -30,7 +29,9 @@ async function verify() {
   const mode = await fetch(url + '/trip-mode', {
     signal: AbortSignal.timeout(1500),
   });
-  if (!mode.ok || (await mode.json()).mode !== 'live')
+  if (!mode.ok) throw new Error('Live server unavailable.');
+  const info = await mode.json();
+  if (info.mode !== 'live' || info.imageProvider !== config.imageProvider)
     throw new Error('Start the live demo on the selected loopback port first.');
 
   const browser = await chromium.launch({
@@ -66,7 +67,7 @@ async function verify() {
           (item) =>
             item.url() === url + '/all-apis' &&
             item.request().method() === 'POST',
-          { timeout: 13_000 },
+          { timeout: 26_000 },
         );
         await page.getByRole('button', { name: 'Plan My Trip' }).click();
         const http = await response;
@@ -74,19 +75,33 @@ async function verify() {
         if (
           !http.ok ||
           trip.synthetic !== false ||
-          trip.location?.country !== country ||
+          (country
+            ? trip.location?.country !== country
+            : trip.location?.name !== 'Ramallah') ||
           trip.weather?.kind !== expectedWeather ||
           (offset && trip.weather.date !== date) ||
           typeof trip.weather?.date !== 'string' ||
           !Number.isFinite(trip.weather?.temperatureC) ||
           !localPhotoPattern.test(trip.image) ||
-          !pixabaySource(trip.photo?.source)
+          !photoSource(trip.photo)
         ) {
           results.push({
             destination,
             status: 'incomplete',
             http: http.status(),
-            location: trip.location?.country === country,
+            error: [
+              'location_authorization',
+              'location_rate_limited',
+              'location_timeout',
+              'location_unavailable',
+              'destination_ambiguous',
+              'destination_not_found',
+            ].includes(trip.error)
+              ? trip.error
+              : null,
+            location: country
+              ? trip.location?.country === country
+              : trip.location?.name === 'Ramallah',
             weather: Boolean(trip.weather),
             photo: Boolean(trip.photo),
           });
@@ -124,7 +139,9 @@ async function verify() {
           destination,
           status: 'providers responded; photo relevance review pending',
           observation: trip.weather.date,
-          source: pixabaySource(trip.photo.source),
+          source: photoSource(trip.photo),
+          imageProvider: info.imageProvider,
+          license: trip.photo.license ?? null,
         });
       } catch {
         results.push({ destination, status: 'browser or lookup check failed' });

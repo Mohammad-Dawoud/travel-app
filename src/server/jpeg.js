@@ -1,5 +1,5 @@
 // Verify bounded JPEG structure before serving bytes to the browser decoder.
-function validJpeg(bytes) {
+function validJpeg(bytes, maxSide = 640) {
   if (
     !Buffer.isBuffer(bytes) ||
     bytes.length < 20 ||
@@ -33,8 +33,8 @@ function validJpeg(bytes) {
       if (
         !width ||
         !height ||
-        width > 640 ||
-        height > 640 ||
+        width > maxSide ||
+        height > maxSide ||
         ![1, 3].includes(components) ||
         length !== 8 + 3 * components
       )

@@ -4,11 +4,13 @@ const { deadline, TripError } = require('./providers');
 const { openPixabayCache, photoLimit } = require('./pixabay-cache');
 const { providerGet, ProviderError } = require('./https-provider');
 const { validJpeg } = require('./jpeg');
+const { createWikimediaImageProvider } = require('./wikimedia-provider');
 
 const jsonTimeout = 3000;
 const photoTimeout = 4000;
 const liveDeadline = 10_000;
-const geonamesHost = 'api.geonames.org';
+const wikimediaDeadline = 22_000;
+const geonamesHost = 'secure.geonames.org';
 const weatherbitHost = 'api.weatherbit.io';
 const pixabayHost = 'pixabay.com';
 const imageHosts = [pixabayHost, 'cdn.pixabay.com'];
@@ -21,7 +23,8 @@ for (const a of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
   for (const b of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
     const code = a + b;
     const name = regionNames.of(code);
-    if (name && name !== code) regionCodes.set(fold(name), code);
+    if (name && name !== code)
+      regionCodes.set(fold(name), new Intl.Locale('und-' + code).region);
   }
 }
 
@@ -150,7 +153,7 @@ async function findPlace(get, config, destination, signal) {
   const [city] = parts;
   const qualifier = parts.length > 1 ? parts.at(-1) : '';
   const country = /^[a-z]{2}$/i.test(qualifier)
-    ? qualifier.toUpperCase()
+    ? new Intl.Locale('und-' + qualifier.toUpperCase()).region
     : (regionCodes.get(fold(qualifier)) ?? '');
   const query = {
     name_equals: city,
@@ -289,13 +292,59 @@ function selectPhoto(data, location) {
   return null;
 }
 
+function createPixabayImageProvider(get, config) {
+  return {
+    name: 'pixabay',
+    imageHosts,
+    assetUrl: imageUrl,
+    maxSide: 640,
+    async select(location, signal) {
+      const query = location.name + ' ' + location.country;
+      if ([...query].length > 100) return null;
+      const params = {
+        key: config.pixabay,
+        q: query,
+        image_type: 'photo',
+        orientation: 'horizontal',
+        safesearch: 'true',
+        order: 'popular',
+        per_page: '5',
+      };
+      const data = await limited(
+        get,
+        httpsUrl(pixabayHost, '/api/', params),
+        [pixabayHost],
+        signal,
+      );
+      return selectPhoto(data, location);
+    },
+    attribution: ({ source, creator }) =>
+      pixabaySource(source) && boundedText(creator, 80)
+        ? { source, creator }
+        : null,
+  };
+}
+
 function createLiveProviders(
   config,
   { get = providerGet, cache = openPixabayCache(), now = Date.now } = {},
 ) {
   let lastWeather = -Infinity;
   const working = new Set();
-  const secrets = [config.geonames, config.weatherbit, config.pixabay];
+  const secrets = [config.geonames, config.weatherbit, config.pixabay].filter(
+    Boolean,
+  );
+  const media =
+    config.imageProvider === 'pixabay'
+      ? createPixabayImageProvider(get, config)
+      : createWikimediaImageProvider((host, parameters, signal) =>
+          limited(
+            get,
+            httpsUrl(host, '/w/api.php', parameters),
+            [host],
+            signal,
+          ),
+        );
   const safe = (...fields) =>
     fields.every((field) =>
       secrets.every((secret) =>
@@ -353,57 +402,51 @@ function createLiveProviders(
   }
 
   async function photo(location, signal) {
-    const query = location.name + ' ' + location.country;
-    const key = fold(query);
-    if ([...query].length > 100 || working.has(key)) return null;
+    const previousKey = fold(location.name + ' ' + location.country);
+    // Coordinates separate same-named places. Pixabay retains its pre-existing city/country quota key.
+    const key =
+      media.name +
+      ':' +
+      previousKey +
+      (media.name === 'wikimedia'
+        ? ':' +
+          location.latitude.toFixed(3) +
+          ',' +
+          location.longitude.toFixed(3)
+        : '');
+    if (working.has(key) || (media.name === 'wikimedia' && working.size > 0))
+      return null;
     working.add(key);
     try {
-      let saved = cache.lookup(key);
+      let cacheKey = key;
+      let saved = cache.lookup(cacheKey);
+      if (!saved && media.name === 'pixabay') {
+        // Existing, unprefixed records predate Wikimedia and can only belong to Pixabay.
+        saved = cache.lookup(previousKey);
+        if (saved) cacheKey = previousKey;
+      }
       if (!saved) {
         if (!cache.hasRoom(working.size - 1)) return null;
-        const params = {
-          key: config.pixabay,
-          q: query,
-          image_type: 'photo',
-          orientation: 'horizontal',
-          safesearch: 'true',
-          order: 'popular',
-          per_page: '5',
-        };
-        const data = await limited(
-          get,
-          httpsUrl(pixabayHost, '/api/', params),
-          [pixabayHost],
-          signal,
-        );
-        const candidate = selectPhoto(data, location);
+        const candidate = await media.select(location, signal);
+        signal.throwIfAborted();
         cache.save(
-          key,
-          candidate &&
-            safe(candidate.source, candidate.creator, candidate.asset)
-            ? candidate
-            : null,
+          cacheKey,
+          candidate && safe(...Object.values(candidate)) ? candidate : null,
         );
-        saved = cache.lookup(key);
+        saved = cache.lookup(cacheKey);
       }
-      if (!saved?.hit) return null;
-      const { source, creator, asset } = saved.hit;
-      const url = imageUrl(asset);
-      if (
-        !pixabaySource(source) ||
-        !boundedText(creator, 80) ||
-        !safe(source, creator, asset) ||
-        !url
-      )
-        return null;
+      if (!saved?.hit || !safe(...Object.values(saved.hit))) return null;
+      const url = media.assetUrl(saved.hit.asset);
+      const attribution = media.attribution(saved.hit);
+      if (!url || !attribution) return null;
       let token = saved.token;
       if (!token) {
-        const bytes = await limited(get, url, imageHosts, signal, true);
-        if (!validJpeg(bytes)) return null;
-        token = cache.savePhoto(key, bytes);
+        const bytes = await limited(get, url, media.imageHosts, signal, true);
+        if (!validJpeg(bytes, media.maxSide)) return null;
+        token = cache.savePhoto(cacheKey, bytes);
       }
       return token
-        ? { image: '/trip-photo/' + token, photo: { source, creator } }
+        ? { image: '/trip-photo/' + token, photo: attribution }
         : null;
     } catch {
       return null;
@@ -413,7 +456,8 @@ function createLiveProviders(
   }
 
   return {
-    timeout: liveDeadline,
+    imageProvider: media.name,
+    timeout: media.name === 'wikimedia' ? wikimediaDeadline : liveDeadline,
     async trip(trip, signal) {
       const location = await findPlace(get, config, trip.destination, signal);
       if (!safe(location.name, location.country))

@@ -56,7 +56,12 @@ function readHttps(url, address, { signal, cap, accept, open = request }) {
         autoSelectFamily: false,
         signal,
         lookup: (_host, _options, callback) => callback(null, address, 4),
-        headers: { Accept: accept, 'Accept-Encoding': 'identity' },
+        headers: {
+          Accept: accept,
+          'Accept-Encoding': 'identity',
+          'User-Agent':
+            'TravelGuideApp/0.1 (local academic project; https://github.com/Mohammad-Dawoud/travel-app)',
+        },
       },
       (response) => {
         const status = response.statusCode;
