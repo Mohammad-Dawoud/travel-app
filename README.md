@@ -1,80 +1,75 @@
 # Travel Guide App
 
-An academic travel planner with departure countdown, return date, duration, weather and destination imagery. The server binds to `127.0.0.1`. Mock mode is deterministic and credential-free. Live mode uses GeoNames and Weatherbit with Wikimedia Commons as the default image provider. Pixabay is optional.
+Travel App was my original capstone project for Udacity's Front End Web Developer Nanodegree. The later technical recovery restored the local build and server, added deterministic weather and image fixtures, and implemented bounded live provider requests and a service worker for the app shell.
 
-## Run mock mode
+Plan a trip by destination, departure date and return date. The app shows the departure countdown, trip duration, weather and a destination photograph or local illustration. The default mode uses synthetic data and needs no credentials. Optional live mode uses GeoNames and Weatherbit, with Wikimedia Commons as the default photo provider.
 
-Use Node.js 24.22.3 and npm 11.19.1. Run from this checkout in PowerShell.
+## Run locally in mock mode
 
-```powershell
-$travelNode = (Resolve-Path -LiteralPath '../../P3-T01-A/ND0067-P01-Image-Processing-API/.local/node-v24.22.3-win-x64').Path
-$env:Path = "$travelNode;$env:Path"
-$env:TRAVEL_PORT = '4175'
-$env:TRAVEL_PROVIDER_MODE = 'mock'
+Install [Node.js 24.22.3 LTS](https://nodejs.org/en/blog/release/v24.22.3/) with npm 11.19.1 and make both available on your PATH. Use a fresh terminal without a live-mode override. From a fresh clone:
+
+```sh
+git clone https://github.com/Mohammad-Dawoud/travel-app.git
+cd travel-app
+node --version
+npm --version
 npm ci --ignore-scripts --include=optional --no-audit --no-fund
 npm run demo
 ```
 
-Open [the local app](http://127.0.0.1:4175). Try Paris, Tokyo or Cairo. Dates use UTC calendar days. Press Ctrl+C in the server terminal to stop.
+`npm run demo` builds the client and service worker, then starts Express. Open [http://127.0.0.1:4175](http://127.0.0.1:4175) and try Paris, Tokyo or Cairo. Dates use UTC calendar days. The server listens on loopback. Press Ctrl+C to stop it. If port 4175 is busy, set `TRAVEL_PORT` to a free local port and use the address printed at startup.
 
-## Configure live mode
+The pinned npm CLI has separately tracked advisory findings in its bundled dependencies. Use the reviewed lock and trusted npm registry inputs. The install command disables package lifecycle scripts.
 
-1. Create a [GeoNames account](https://www.geonames.org/create-account) and enable free web services under its account settings. Use the account username.
-2. Create a [Weatherbit account](https://www.weatherbit.io/account/create), obtain an API key and confirm the account's enabled endpoints and usage rights.
-3. Wikimedia Commons needs no API credential. For optional Pixabay access, use an approved [Pixabay account](https://pixabay.com/accounts/register/) and obtain the key from the [API documentation](https://pixabay.com/api/docs/).
+## Optional live mode
 
-Use fresh owner-managed credentials. Revoke or rotate any historically exposed credentials from the provider account. Keep the populated file local. The tracked template contains empty values.
+1. Use your [GeoNames account](https://www.geonames.org/create-account) with free web services enabled and your [Weatherbit account](https://www.weatherbit.io/account/create) with the required endpoint access and usage rights.
+2. Copy `.env.example` to `.local/live.env` inside this clone. In PowerShell, with the working directory set to the repository:
 
-```powershell
-New-Item -ItemType Directory -Path '.local' -Force | Out-Null
-if (!(Test-Path -LiteralPath '.local/live.env')) {
-  Copy-Item -LiteralPath '.env.example' -Destination '.local/live.env'
-}
-notepad '.local/live.env'
-```
+   ```powershell
+   New-Item -ItemType Directory -Path '.local' -Force | Out-Null
+   if (!(Test-Path -LiteralPath '.local/live.env')) {
+     Copy-Item -LiteralPath '.env.example' -Destination '.local/live.env'
+   }
+   ```
 
-Fill in `GEONAMES_USERNAME` and `WEATHERBIT_API_KEY` in the editor. Keep `TRAVEL_IMAGE_PROVIDER=wikimedia` and leave `PIXABAY_API_KEY` blank. For explicitly selected `pixabay`, configure `PIXABAY_API_KEY` locally. Leave `WEATHERBIT_FORECAST_DAYS=7` for the free plan. Select `16` only if your existing account already permits it. After the isolated PATH setup shown above, run:
+3. Edit that private file locally. Set `GEONAMES_USERNAME` and `WEATHERBIT_API_KEY` using fresh owner-managed values. Keep `TRAVEL_PROVIDER_MODE=live` and `TRAVEL_IMAGE_PROVIDER=wikimedia`. Wikimedia Commons requires no key. Keep `WEATHERBIT_FORECAST_DAYS=7` unless your account supports 16 days. For explicitly selected `pixabay`, use your [approved Pixabay account](https://pixabay.com/accounts/register/) and set `PIXABAY_API_KEY`. Genuine Pixabay access remains unverified for this app.
+4. Run `npm run demo:live` and open the printed loopback URL. Try `Lisbon, Portugal`. If the city is ambiguous, add the country or region. Stop with Ctrl+C.
 
-```powershell
-$env:TRAVEL_PORT = '4175'
-$env:TRAVEL_PROVIDER_MODE = 'live'
-$env:TRAVEL_IMAGE_PROVIDER = 'wikimedia'
-npm run demo:live
-```
+The server reads `.local/live.env` only for the explicit live commands. Keep the file out of Git, browser code and screenshots. Existing shell variables take precedence over the file, so use a fresh shell if you configured providers in another session. Revoke or rotate any historically exposed key through its provider.
 
-Open [the local app](http://127.0.0.1:4175). Try `Lisbon, Portugal`. Where multiple places match, enter `City, Country` or `City, Region, Country`. Close the server with Ctrl+C. Node gives existing terminal environment variables precedence over its local environment file. Use a fresh shell if it contains older credential settings.
+## Provider data, photo credits and offline behavior
 
-## Provider limits and offline behavior
+- **GeoNames** resolves destinations on its secure HTTPS endpoint. Use the limits and credits for your account. The app links to GeoNames for attribution. [Web services overview](https://www.geonames.org/export/) · [Credit limits](https://www.geonames.org/export/credits.html)
+- **Weatherbit** supplies current conditions with a UTC observation time or an exact-date forecast when the departure is within the available window. Weather responses are transient and attributed in the app. Confirm your plan's limits and public-use rights before any hosted demo or redistribution. Free access is non-commercial. [Pricing](https://www.weatherbit.io/pricing) · [Terms](https://www.weatherbit.io/terms)
+- **Wikimedia Commons** starts with an article check via Wikipedia PageImages, then verifies the image source and license using Commons metadata. The app displays a title, creator, source and license link plus the thumbnail disclosure. Retain the creator, source, applicable license and change disclosures if you reuse an image. Follow any share-alike requirements of the particular file. The app keeps selected thumbnails in a private bounded cache. [PageImages](https://www.mediawiki.org/wiki/API:Pageimages) · [ImageInfo](https://www.mediawiki.org/wiki/API:Imageinfo) · [Commons reuse requirements](https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia)
+- **Pixabay** is optional. The app keeps selected results or empty results in an ignored 24-hour cache and shows source credit. A missing or unsuitable photo displays a labeled local illustration. [API documentation](https://pixabay.com/api/docs/) · [Content license](https://pixabay.com/service/license-summary/)
+- The **service worker** can reload the app shell and owned static assets after an online visit. Trip lookup requires the local server. Live weather and destination photos stay out of the offline cache.
 
-- GeoNames uses its documented secure.geonames.org HTTPS endpoint. Free access lists 10,000 daily and 1,000 hourly credits per account. Search consumes one credit. The app links to GeoNames for attribution. [Overview](https://www.geonames.org/export/) · [Credits](https://www.geonames.org/export/credits.html)
-- Weatherbit Free lists current conditions and a seven-day daily forecast, with up to 50 calls per day and one per second. The app uses at most one Weatherbit call per trip. Today shows current conditions with the UTC observation time. Future dates require an exact forecast match. Weatherbit data is held only for the current response and browser view, and its source and formatting attribution are visible. Free access is non-commercial. Check the applicable license before public or portfolio use. [Pricing](https://www.weatherbit.io/pricing) · [Terms](https://www.weatherbit.io/terms)
-- Wikimedia starts with a free PageImages result from a Wikipedia city article checked by name and location. When Wikipedia lacks coordinates it can check the linked Wikidata item. An unsuitable lead triggers one bounded Commons text search. Commons file metadata, creator, source, restrictions and license must pass the local policy. The app downloads one validated JPEG and shows the source, title, creator, license and thumbnail disclosure. The Wikimedia-specific limit is 960 pixels per side and 2 MiB. Search and image records share the 12-entry, 24-hour private cache, with separate provider keys. [PageImages](https://www.mediawiki.org/wiki/API:Pageimages) · [ImageInfo](https://www.mediawiki.org/wiki/API:Imageinfo) · [Commons reuse](https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia)
-- Pixabay documents a default 100 calls per 60 seconds, 24-hour response caching, and no permanent direct image embedding or mass downloads. The app preserves one selected result or an empty result per canonical query for 24 hours across restarts, downloads only a selected candidate, and displays it from an opaque local image path with source credit. The ignored SQLite cache holds at most 12 entries with a 2 MiB limit per JPEG. Expired records are removed on cache use and startup. Use one live process per checkout. Empty, invalid or unrelated photo results show the labeled local illustration. Verify relevance visually. [API documentation](https://pixabay.com/api/docs/) · [Content license](https://pixabay.com/service/license-summary/)
-- The service worker precaches the local application shell and its owned static assets. Live lookups, weather and destination photos require the server and stay outside that cache. The offline form shows a reconnect message.
+## Verification and scope
 
-Missing credentials stop live startup with the required field names. GeoNames authorization errors call for checking service activation. Weatherbit authorization or forecast-window warnings call for checking the existing plan and selected date. Image fallback can indicate absent relevant results, unsafe or unsupported image data, unavailable media, or a full cache. Wait for normal expiration if the cache is full. If port 4175 is occupied, leave the existing listener alone and choose a free port. Use that port for the browser URL and for TRAVEL_PORT in both terminals.
+From the repository root after the locked install, run:
 
-## Verification
-
-```powershell
+```sh
 npm run build
 npm run lint
 npm run format:check
 npm test
-$env:PLAYWRIGHT_BROWSERS_PATH = (Resolve-Path -LiteralPath '../../P3-T03-A/ND0067-P03-My-Store/.local/browsers').Path
+npm exec -- playwright install --only-shell chromium
 npm run test:e2e
 ```
 
-Regression tests require no credentials. Live adapter tests inject upstream responses. The pinned browser is Chromium headless shell 159.0.8154.6, revision 1255.
+The regression suites use fixture data. Playwright 1.65.1 uses Chromium headless shell 159.0.8154.6 (revision 1255). Keep local port 4176 available for the browser tests. On other operating systems, see the [Playwright browser setup](https://playwright.dev/docs/browsers) for platform dependencies.
 
-For an explicit live check, start the live server first. In a second PowerShell terminal with the same isolated Node and browser PATH setup:
+The accepted Windows x64 loopback recovery passed build, lint, formatting, 54 Jest tests and 10 Playwright cases at desktop and narrow widths. Five live trips passed with genuine GeoNames, Weatherbit and Wikimedia responses, including an exact-date forecast. The owner passed six additional manual checks. The optional Pixabay path was checked with fixtures only.
+
+For the opt-in live smoke, keep the live server running and use a second PowerShell terminal in the same checkout with the same `TRAVEL_PORT` if you changed it:
 
 ```powershell
-$env:TRAVEL_PORT = '4175' # Match the port of the live server.
-$env:TRAVEL_PROVIDER_MODE = 'live'
-$env:TRAVEL_IMAGE_PROVIDER = 'wikimedia' # Match the server's provider.
 $env:TRAVEL_LIVE_SMOKE = '1'
 npm run smoke:live
 ```
 
-One run submits five trips, paced at least 1.1 seconds apart. Paris, Tokyo, Cairo and Ramallah check current conditions. Lisbon checks an exact departure forecast two days ahead. Allow at most five GeoNames requests, five Weatherbit requests, 20 Wikimedia metadata requests and five selected JPEG downloads. Optional Pixabay uses at most five search calls and five downloads instead. The script records sanitized outcomes and private screenshots of successful displays in `.local/live-smoke`. Visually review photo relevance and the linked source and license. Stop the server after review.
+The smoke sends five trip requests and uses the providers' account quotas. Install the browser above before running it. Keep its verification outputs private and stop the server after review.
+
+The original academic submission passed its historical assessment. Historical design comparison and the historical choice of optional enhancement remain unverified. The current recovery verifies the return-date and trip-duration feature. Verification covers a local portfolio demo. Production readiness, public deployment and redistribution of provider data or photos remain separate.
